@@ -1,4 +1,4 @@
-# 📧 TempMail Bot
+# TempMail Bot
 
 <p align="center">
   <img src="https://img.icons8.com/fluency/192/secured-letter.png" width="150" alt="TempMail Logo">
@@ -7,11 +7,11 @@
 <h1 align="center">TempMail Bot</h1>
 
 <p align="center">
-  <b>Fast • Simple • Private • Button-Based</b>
+  <b>سریع • ساده • کاربردی • دکمه‌ای</b>
 </p>
 
 <p align="center">
-  A temporary email bot for Telegram powered by the Mail.tm API.
+  ربات ایمیل موقت تلگرام با رابط کاربری کاملاً دکمه‌ای
 </p>
 
 <p align="center">
@@ -28,6 +28,183 @@
 
 ---
 
+# 🇮🇷 راهنمای فارسی
+
+## ✨ امکانات
+
+* 📧 ساخت ایمیل موقت
+* 📬 دریافت ایمیل‌های ورودی
+* 🔄 بروزرسانی صندوق ورودی
+* 🗑️ حذف ایمیل موقت
+* 🔘 رابط کاربری کاملاً دکمه‌ای
+* 🤖 استفاده از Inline Keyboard تلگرام
+* ⚡ سریع و سبک
+* ☁️ آماده برای Railway
+* 📡 اتصال به Mail.tm API
+* 👤 نشست جداگانه برای هر کاربر
+
+---
+
+## 🎛️ منوی ربات
+
+```text
+╔══════════════════════════════╗
+║          📧 TempMail         ║
+╠══════════════════════════════╣
+║      📧 ساخت ایمیل جدید      ║
+╠══════════════════════════════╣
+║        📬 صندوق ورودی        ║
+╠══════════════════════════════╣
+║  🔄 بروزرسانی   │  🗑️ حذف    ║
+╠══════════════════════════════╣
+║           ℹ️ راهنما           ║
+╚══════════════════════════════╝
+```
+
+تمام امکانات ربات از طریق دکمه‌های تلگرام قابل استفاده هستند و نیازی به تایپ دستورات پیچیده نیست.
+
+---
+
+## 📧 ساخت ایمیل موقت
+
+برای ساخت یک ایمیل موقت، روی دکمه:
+
+**📧 ساخت ایمیل جدید**
+
+بزنید.
+
+ربات به‌صورت خودکار یک آدرس ایمیل موقت ایجاد می‌کند.
+
+---
+
+## 📬 صندوق ورودی
+
+بعد از ساخت ایمیل، با انتخاب:
+
+**📬 صندوق ورودی**
+
+می‌توانید ایمیل‌های دریافت‌شده را مشاهده کنید.
+
+---
+
+## 🔄 بروزرسانی
+
+اگر منتظر دریافت ایمیل هستید، روی:
+
+**🔄 بروزرسانی**
+
+بزنید تا صندوق ورودی دوباره بررسی شود.
+
+---
+
+## 🗑️ حذف ایمیل
+
+برای حذف ایمیل فعلی، روی:
+
+**🗑️ حذف**
+
+بزنید.
+
+---
+
+## ℹ️ راهنما
+
+با انتخاب:
+
+**ℹ️ راهنما**
+
+می‌توانید توضیحات مربوط به امکانات ربات را مشاهده کنید.
+
+---
+
+## ⚠️ نکات مهم
+
+ایمیل‌های موقت برای استفاده‌های کوتاه‌مدت ساخته شده‌اند.
+
+برای موارد حساس مانند:
+
+* 🏦 حساب‌های بانکی
+* 💳 اطلاعات مالی
+* 🔐 بازیابی حساب‌های مهم
+* 📄 اطلاعات محرمانه
+* 👤 حساب‌های شخصی مهم
+
+از ایمیل موقت استفاده نکنید.
+
+ممکن است ایمیل‌ها یا حساب‌های موقت توسط سرویس ارائه‌دهنده منقضی یا حذف شوند.
+
+---
+
+## 🚀 نصب
+
+ابتدا Repository را دریافت کنید:
+
+```bash
+git clone https://github.com/adwiawda/TempMail.git
+cd TempMail
+```
+
+سپس وابستگی‌ها را نصب کنید:
+
+```bash
+pip install -r requirements.txt
+```
+
+توکن ربات تلگرام را به‌عنوان Environment Variable قرار دهید:
+
+```text
+BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
+```
+
+و ربات را اجرا کنید:
+
+```bash
+python bot.py
+```
+
+---
+
+## ☁️ نصب روی Railway
+
+این پروژه برای Railway آماده شده است.
+
+در قسمت **Variables** مقدار زیر را اضافه کنید:
+
+```text
+BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
+```
+
+دستور اجرا:
+
+```bash
+python bot.py
+```
+
+یا از `Procfile` استفاده کنید:
+
+```text
+worker: python bot.py
+```
+
+---
+
+## 📁 ساختار پروژه
+
+```text
+TempMail/
+│
+├── bot.py
+├── requirements.txt
+├── Procfile
+└── README.md
+```
+
+نیازی به فایل جداگانه برای لوگو نیست.
+
+---
+
+# 🇬🇧 English Guide
+
 ## ✨ Features
 
 * 📧 Create temporary email addresses
@@ -39,11 +216,11 @@
 * ⚡ Fast and lightweight
 * ☁️ Railway ready
 * 📡 Mail.tm API integration
-* 👤 Separate email session for each user
+* 👤 Separate session for each user
 
 ---
 
-## 🎛️ Simple Interface
+## 🎛️ Bot Interface
 
 ```text
 ╔══════════════════════════════╗
@@ -53,46 +230,78 @@
 ╠══════════════════════════════╣
 ║           📬 Inbox           ║
 ╠══════════════════════════════╣
-║  🔄 Refresh    │   🗑 Delete  ║
+║  🔄 Refresh    │   🗑️ Delete  ║
 ╠══════════════════════════════╣
 ║            ℹ️ Help           ║
 ╚══════════════════════════════╝
 ```
 
-Everything is controlled through Telegram's inline buttons.
+Everything can be controlled using Telegram inline buttons.
+
+---
+
+## 📧 Create Temporary Email
+
+Press:
+
+**📧 Create New Email**
+
+The bot will automatically generate a temporary email address.
+
+---
+
+## 📬 Inbox
+
+Press:
+
+**📬 Inbox**
+
+to view received messages.
+
+---
+
+## 🔄 Refresh
+
+If you are waiting for a new message, press:
+
+**🔄 Refresh**
+
+to check the inbox again.
+
+---
+
+## 🗑️ Delete Email
+
+Press:
+
+**🗑️ Delete**
+
+to remove the current temporary email from the bot session.
 
 ---
 
 ## 🚀 Installation
 
-### Clone the repository
+Clone the repository:
 
 ```bash
 git clone https://github.com/adwiawda/TempMail.git
 cd TempMail
 ```
 
-### Install dependencies
+Install the dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Set your Bot Token
+Set your Telegram Bot Token:
 
-Linux / macOS:
-
-```bash
-export BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
+```text
+BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
 ```
 
-Windows PowerShell:
-
-```powershell
-$env:BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
-```
-
-### Start the bot
+Run the bot:
 
 ```bash
 python bot.py
@@ -102,7 +311,7 @@ python bot.py
 
 ## ☁️ Railway Deployment
 
-The project is ready for deployment on Railway.
+The project is ready for Railway.
 
 Add the following environment variable:
 
@@ -141,25 +350,13 @@ No additional logo file is required.
 
 ## 🔐 Security
 
-Never publish your Telegram Bot Token in your GitHub repository.
+Never publish your Telegram Bot Token on GitHub.
 
-Use environment variables instead:
+Always use environment variables:
 
 ```text
 BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
 ```
-
----
-
-## 📬 How It Works
-
-1. Start the Telegram bot.
-2. Press **Create New Email**.
-3. A temporary email address is generated.
-4. Use the address wherever a temporary email is required.
-5. Open **Inbox** to view received messages.
-6. Press **Refresh** to check for new emails.
-7. Press **Delete** when you are finished.
 
 ---
 
