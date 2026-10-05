@@ -1,200 +1,329 @@
-import html
 import os
-import time
+import asyncio
+import logging
+import aiohttp
 
-import requests
-import telebot
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import (
+    Application,
+    CallbackQueryHandler,
+    CommandHandler,
+    ContextTypes,
+)
 
-TOKEN = os.getenv("TOKEN")
-API = "https://api.mail.tm"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-if not TOKEN:
-    raise RuntimeError("TOKEN environment variable is not set")
+if not BOT_TOKEN:
+    raise RuntimeError("BOT_TOKEN environment variable is missing")
 
-bot = telebot.TeleBot(TOKEN)
+API_URL = "https://api.mail.tm"
+
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
+)
+
+# اطلاعات ایمیل موقت هر کاربر
 users = {}
 
 
-def api_request(method, url, **kwargs):
-    kwargs.setdefault("timeout", 20)
-    response = requests.request(method, url, **kwargs)
-    response.raise_for_status()
-    return response
+async def api_request(method, url, **kwargs):
+    async with aiohttp.ClientSession() as session:
+        async with session.request(method, url, **kwargs) as response:
+            try:
+                data = await response.json()
+            except Exception:
+                data = {}
+
+            return response.status, data
 
 
-def get_domain():
-    data = api_request("GET", f"{API}/domains").json()
-    domains = data.get("hydra:member", [])
-
-    if not domains:
-        raise RuntimeError("No mail.tm domains available")
-
-    return domains[0]["domain"]
-
-
-def create_account():
-    domain = get_domain()
-
-    # زمان میلی‌ثانیه‌ای برای جلوگیری از تکراری شدن آدرس
-    name = f"user{int(time.time() * 1000)}"
-    address = f"{name}@{domain}"
-
-    password = f"Temp{int(time.time() * 1000)}Mail!"
-
-    response = requests.post(
-        f"{API}/accounts",
-        json={
-            "address": address,
-            "password": password,
-        },
-        timeout=20,
+async def get_domain():
+    status, data = await api_request(
+        "GET",
+        f"{API_URL}/domains?page=1"
     )
 
-    if response.status_code not in (200, 201):
-        return None, None
+    if status != 200:
+        return None
 
-    token_response = requests.post(
-        f"{API}/token",
+    members = data.get("hydra:member", [])
+
+    if not members:
+        return None
+
+    return members[0]["domain"]
+
+
+async def create_temp_mail():
+    domain = await get_domain()
+
+    if not domain:
+        return None
+
+    username = f"user{os.urandom(5).hex()}"
+    email = f"{username}@{domain}"
+    password = os.urandom(12).hex()
+
+    status, data = await api_request(
+        "POST",
+        f"{API_URL}/accounts",
         json={
-            "address": address,
-            "password": password,
-        },
-        timeout=20,
+            "address": email,
+            "password": password
+        }
     )
 
-    token_response.raise_for_status()
+    if status not in (200, 201):
+        return None
 
-    token = token_response.json().get("token")
+    status, token_data = await api_request(
+        "POST",
+        f"{API_URL}/token",
+        json={
+            "address": email,
+            "password": password
+        }
+    )
+
+    if status != 200:
+        return None
+
+    token = token_data.get("token")
 
     if not token:
-        return None, None
+        return None
 
-    return address, token
-
-
-@bot.message_handler(commands=["start", "new"])
-def start(message):
-    try:
-        address, token = create_account()
-    except (requests.RequestException, ValueError, KeyError, RuntimeError):
-        address, token = None, None
-
-    if not address or not token:
-        bot.send_message(
-            message.chat.id,
-            "خطا در ساخت ایمیل. چند لحظه بعد دوباره تلاش کن."
-        )
-        return
-
-    users[message.chat.id] = {
-        "address": address,
-        "token": token,
+    return {
+        "email": email,
+        "password": password,
+        "token": token
     }
 
-    bot.send_message(
-        message.chat.id,
-        f"ایمیل موقتت ساخته شد:\n"
-        f"<code>{html.escape(address)}</code>\n\n"
-        f"برای دیدن پیام‌ها بفرست:\n/inbox",
-        parse_mode="HTML",
+
+async def get_messages(token):
+    status, data = await api_request(
+        "GET",
+        f"{API_URL}/messages",
+        headers={
+            "Authorization": f"Bearer {token}"
+        }
+    )
+
+    if status != 200:
+        return []
+
+    return data.get("hydra:member", [])
+
+
+def main_keyboard():
+    return InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                "📧 ساخت ایمیل جدید",
+                callback_data="create"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "📬 صندوق ورودی",
+                callback_data="inbox"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "🔄 بروزرسانی",
+                callback_data="refresh"
+            ),
+            InlineKeyboardButton(
+                "🗑 حذف",
+                callback_data="delete"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "ℹ️ راهنما",
+                callback_data="help"
+            )
+        ]
+    ])
+
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = (
+        "📧 *Temp Mail Bot*\n\n"
+        "به ربات ایمیل موقت خوش آمدید.\n\n"
+        "از دکمه‌های زیر استفاده کنید:"
+    )
+
+    await update.message.reply_text(
+        text,
+        parse_mode="Markdown",
+        reply_markup=main_keyboard()
     )
 
 
-@bot.message_handler(commands=["inbox"])
-def inbox(message):
-    user = users.get(message.chat.id)
+async def create_email(query):
+    user_id = query.from_user.id
 
-    if not user:
-        bot.send_message(
-            message.chat.id,
-            "اول /start رو بزن."
+    await query.edit_message_text(
+        "⏳ در حال ساخت ایمیل موقت..."
+    )
+
+    account = await create_temp_mail()
+
+    if not account:
+        await query.edit_message_text(
+            "❌ ساخت ایمیل ناموفق بود.\n\n"
+            "لطفاً چند لحظه بعد دوباره تلاش کنید.",
+            reply_markup=main_keyboard()
         )
         return
 
-    headers = {
-        "Authorization": f"Bearer {user['token']}"
-    }
+    users[user_id] = account
 
-    try:
-        response = api_request(
-            "GET",
-            f"{API}/messages",
-            headers=headers,
-        )
+    text = (
+        "✅ *ایمیل موقت ساخته شد!*\n\n"
+        f"📧 ایمیل:\n`{account['email']}`\n\n"
+        "برای دریافت ایمیل‌های جدید، روی «صندوق ورودی» بزنید."
+    )
 
-        messages = response.json().get(
-            "hydra:member",
-            []
-        )
+    await query.edit_message_text(
+        text,
+        parse_mode="Markdown",
+        reply_markup=main_keyboard()
+    )
 
-    except (requests.RequestException, ValueError):
-        bot.send_message(
-            message.chat.id,
-            "خطا در دریافت ایمیل‌ها. دوباره تلاش کن."
+
+async def show_inbox(query):
+    user_id = query.from_user.id
+
+    account = users.get(user_id)
+
+    if not account:
+        await query.edit_message_text(
+            "❌ هنوز ایمیل موقتی نساختید.",
+            reply_markup=main_keyboard()
         )
         return
+
+    messages = await get_messages(account["token"])
 
     if not messages:
-        bot.send_message(
-            message.chat.id,
-            "هنوز ایمیلی نیومده."
+        text = (
+            "📬 *صندوق ورودی*\n\n"
+            f"📧 `{account['email']}`\n\n"
+            "📭 هنوز ایمیلی دریافت نشده است."
         )
-        return
+    else:
+        lines = [
+            "📬 *صندوق ورودی*",
+            "",
+            f"📧 `{account['email']}`",
+            ""
+        ]
 
-    for msg in messages[:5]:
-        message_id = msg.get("id")
+        for message in messages[:10]:
+            sender = message.get("from", {})
+            sender_address = sender.get("address", "نامشخص")
+            subject = message.get("subject", "بدون موضوع")
 
-        if not message_id:
-            continue
+            lines.append(
+                f"✉️ *{subject}*\n"
+                f"👤 {sender_address}"
+            )
 
-        try:
-            detail = api_request(
-                "GET",
-                f"{API}/messages/{message_id}",
-                headers=headers,
-            ).json()
+        text = "\n\n".join(lines)
 
-        except (requests.RequestException, ValueError):
-            continue
+    await query.edit_message_text(
+        text,
+        parse_mode="Markdown",
+        reply_markup=main_keyboard()
+    )
 
-        sender = detail.get(
-            "from", {}
-        ).get(
-            "address",
-            "نامشخص"
-        )
 
-        subject = detail.get(
-            "subject",
-            "بدون موضوع"
-        )
+async def delete_email(query):
+    user_id = query.from_user.id
 
-        body = (
-            detail.get("text")
-            or detail.get("html")
-            or ""
-        )
-
-        body = str(body)[:2000]
+    if user_id in users:
+        del users[user_id]
 
         text = (
-            f"<b>از:</b> {html.escape(str(sender))}\n"
-            f"<b>موضوع:</b> {html.escape(str(subject))}\n\n"
-            f"{html.escape(body)}"
+            "🗑 *ایمیل حذف شد.*\n\n"
+            "می‌توانید یک ایمیل موقت جدید بسازید."
         )
+    else:
+        text = "ℹ️ ایمیلی برای حذف وجود ندارد."
 
-        bot.send_message(
-            message.chat.id,
-            text,
-            parse_mode="HTML",
-        )
+    await query.edit_message_text(
+        text,
+        parse_mode="Markdown",
+        reply_markup=main_keyboard()
+    )
+
+
+async def show_help(query):
+    text = (
+        "ℹ️ *راهنمای ربات*\n\n"
+        "📧 ساخت ایمیل جدید\n"
+        "یک آدرس ایمیل موقت ایجاد می‌کند.\n\n"
+        "📬 صندوق ورودی\n"
+        "ایمیل‌های دریافت‌شده را نمایش می‌دهد.\n\n"
+        "🔄 بروزرسانی\n"
+        "صندوق ورودی را دوباره بررسی می‌کند.\n\n"
+        "🗑 حذف\n"
+        "ایمیل فعلی را از ربات حذف می‌کند."
+    )
+
+    await query.edit_message_text(
+        text,
+        parse_mode="Markdown",
+        reply_markup=main_keyboard()
+    )
+
+
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+
+    await query.answer()
+
+    if query.data == "create":
+        await create_email(query)
+
+    elif query.data == "inbox":
+        await show_inbox(query)
+
+    elif query.data == "refresh":
+        await show_inbox(query)
+
+    elif query.data == "delete":
+        await delete_email(query)
+
+    elif query.data == "help":
+        await show_help(query)
+
+
+def main():
+    application = (
+        Application.builder()
+        .token(BOT_TOKEN)
+        .build()
+    )
+
+    application.add_handler(
+        CommandHandler("start", start)
+    )
+
+    application.add_handler(
+        CallbackQueryHandler(button_handler)
+    )
+
+    print("Bot started...")
+
+    application.run_polling(
+        drop_pending_updates=True
+    )
 
 
 if __name__ == "__main__":
-    print("ربات روشن شد...", flush=True)
-
-    bot.infinity_polling(
-        skip_pending=True,
-        timeout=30,
-        long_polling_timeout=30,
-    )
+    main()
