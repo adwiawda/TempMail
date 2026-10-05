@@ -1,23 +1,7 @@
 # 📧 TempMail Bot
 
 <p align="center">
-  <svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#2CA5E0"/>
-        <stop offset="100%" stop-color="#6C63FF"/>
-      </linearGradient>
-    </defs>
-
-```
-<rect x="10" y="10" width="160" height="160" rx="38" fill="url(#g)"/>
-<rect x="35" y="52" width="110" height="78" rx="12" fill="white"/>
-<path d="M35 65 L90 105 L145 65" fill="none" stroke="#6C63FF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M35 124 L70 91" fill="none" stroke="#6C63FF" stroke-width="7" stroke-linecap="round"/>
-<path d="M145 124 L110 91" fill="none" stroke="#6C63FF" stroke-width="7" stroke-linecap="round"/>
-```
-
-  </svg>
+  <img src="https://img.icons8.com/fluency/192/secured-letter.png" width="150" alt="TempMail Logo">
 </p>
 
 <h1 align="center">TempMail Bot</h1>
@@ -32,13 +16,13 @@
 
 <p align="center">
   <a href="https://t.me/meov2ray">
-    <img src="https://img.shields.io/badge/Telegram-Channel-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white">
+    <img src="https://img.shields.io/badge/Telegram-Channel-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" alt="Telegram">
   </a>
   <a href="https://youtube.com/@meov2ray">
-    <img src="https://img.shields.io/badge/YouTube-Channel-FF0000?style=for-the-badge&logo=youtube&logoColor=white">
+    <img src="https://img.shields.io/badge/YouTube-Channel-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube">
   </a>
   <a href="https://t.me/arshannaebi">
-    <img src="https://img.shields.io/badge/Support-Contact-00BFA5?style=for-the-badge&logo=telegram&logoColor=white">
+    <img src="https://img.shields.io/badge/Support-Contact-00BFA5?style=for-the-badge&logo=telegram&logoColor=white" alt="Support">
   </a>
 </p>
 
@@ -63,15 +47,15 @@
 
 ```text
 ╔══════════════════════════════╗
-║        📧 TempMail           ║
+║          📧 TempMail         ║
 ╠══════════════════════════════╣
-║     📧 Create New Email      ║
+║      📧 Create New Email     ║
 ╠══════════════════════════════╣
-║          📬 Inbox            ║
+║           📬 Inbox           ║
 ╠══════════════════════════════╣
-║ 🔄 Refresh    │   🗑️ Delete  ║
+║  🔄 Refresh    │   🗑 Delete  ║
 ╠══════════════════════════════╣
-║           ℹ️ Help             ║
+║            ℹ️ Help           ║
 ╚══════════════════════════════╝
 ```
 
@@ -120,7 +104,7 @@ python bot.py
 
 The project is ready for deployment on Railway.
 
-Add this environment variable:
+Add the following environment variable:
 
 ```text
 BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
@@ -182,32 +166,28 @@ BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
 ## 🛠️ Built With
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white">
-  <img src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white">
-  <img src="https://img.shields.io/badge/Mail.tm-API-6C63FF?style=for-the-badge">
-  <img src="https://img.shields.io/badge/Railway-000000?style=for-the-badge&logo=railway&logoColor=white">
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" alt="Telegram">
+  <img src="https://img.shields.io/badge/Mail.tm-API-6C63FF?style=for-the-badge" alt="Mail.tm">
+  <img src="https://img.shields.io/badge/Railway-000000?style=for-the-badge&logo=railway&logoColor=white" alt="Railway">
 </p>
 
 ---
 
-## 📺 Community
+## 📺 Community & Support
 
 <p align="center">
 
 <a href="https://t.me/meov2ray">
-  <img src="https://img.shields.io/badge/Join%20Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white">
+  <img src="https://img.shields.io/badge/Join%20Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" alt="Telegram">
 </a>
-
-  
 
 <a href="https://youtube.com/@meov2ray">
-  <img src="https://img.shields.io/badge/Watch%20on%20YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white">
+  <img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube">
 </a>
 
-  
-
 <a href="https://t.me/arshannaebi">
-  <img src="https://img.shields.io/badge/Contact%20Support-00BFA5?style=for-the-badge&logo=telegram&logoColor=white">
+  <img src="https://img.shields.io/badge/Contact%20Support-00BFA5?style=for-the-badge&logo=telegram&logoColor=white" alt="Support">
 </a>
 
 </p>
