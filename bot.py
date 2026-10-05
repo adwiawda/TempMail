@@ -1,56 +1,200 @@
-import requests
-import telebot
+import html
+import os
 import time
 
-import os
+import requests
+import telebot
+
 TOKEN = os.getenv("TOKEN")
-bot = telebot.TeleBot(TOKEN)
 API = "https://api.mail.tm"
 
+if not TOKEN:
+    raise RuntimeError("TOKEN environment variable is not set")
+
+bot = telebot.TeleBot(TOKEN)
 users = {}
 
+
+def api_request(method, url, **kwargs):
+    kwargs.setdefault("timeout", 20)
+    response = requests.request(method, url, **kwargs)
+    response.raise_for_status()
+    return response
+
+
 def get_domain():
-    r = requests.get(f"{API}/domains").json()
-    return r["hydra:member"][0]["domain"]
+    data = api_request("GET", f"{API}/domains").json()
+    domains = data.get("hydra:member", [])
+
+    if not domains:
+        raise RuntimeError("No mail.tm domains available")
+
+    return domains[0]["domain"]
+
 
 def create_account():
     domain = get_domain()
-    name = f"user{int(time.time())}"
+
+    # زمان میلی‌ثانیه‌ای برای جلوگیری از تکراری شدن آدرس
+    name = f"user{int(time.time() * 1000)}"
     address = f"{name}@{domain}"
-    password = "Temp123456!"
-    r = requests.post(f"{API}/accounts", json={"address": address, "password": password})
-    if r.status_code not in [200, 201]:
+
+    password = f"Temp{int(time.time() * 1000)}Mail!"
+
+    response = requests.post(
+        f"{API}/accounts",
+        json={
+            "address": address,
+            "password": password,
+        },
+        timeout=20,
+    )
+
+    if response.status_code not in (200, 201):
         return None, None
-    r2 = requests.post(f"{API}/token", json={"address": address, "password": password}).json()
-    token = r2["token"]
+
+    token_response = requests.post(
+        f"{API}/token",
+        json={
+            "address": address,
+            "password": password,
+        },
+        timeout=20,
+    )
+
+    token_response.raise_for_status()
+
+    token = token_response.json().get("token")
+
+    if not token:
+        return None, None
+
     return address, token
 
-@bot.message_handler(commands=['start', 'new'])
-def start(m):
-    address, token = create_account()
-    if not address:
-        bot.send_message(m.chat.id, "خطا در ساخت ایمیل، دوباره تلاش کن.")
-        return
-    users[m.chat.id] = {"address": address, "token": token}
-    bot.send_message(m.chat.id, f"ایمیل موقتت ساخته شد:\n`{address}`\n\nبرای دیدن پیام‌ها بفرست:\n/inbox", parse_mode="Markdown")
 
-@bot.message_handler(commands=['inbox'])
-def inbox(m):
-    if m.chat.id not in users:
-        bot.send_message(m.chat.id, "اول /start رو بزن.")
-        return
-    token = users[m.chat.id]["token"]
-    h = {"Authorization": f"Bearer {token}"}
-    r = requests.get(f"{API}/messages", headers=h).json()
-    msgs = r.get("hydra:member", [])
-    if not msgs:
-        bot.send_message(m.chat.id, "هنوز ایمیلی نیومده.")
-        return
-    for msg in msgs[:5]:
-        mid = msg["id"]
-        d = requests.get(f"{API}/messages/{mid}", headers=h).json()
-        text = f"از: {d.get('from', {}).get('address')}\nموضوع: {d.get('subject')}\n\n{d.get('text', '')[:2000]}"
-        bot.send_message(m.chat.id, text)
+@bot.message_handler(commands=["start", "new"])
+def start(message):
+    try:
+        address, token = create_account()
+    except (requests.RequestException, ValueError, KeyError, RuntimeError):
+        address, token = None, None
 
-print("ربات روشن شد...")
-bot.infinity_polling()
+    if not address or not token:
+        bot.send_message(
+            message.chat.id,
+            "خطا در ساخت ایمیل. چند لحظه بعد دوباره تلاش کن."
+        )
+        return
+
+    users[message.chat.id] = {
+        "address": address,
+        "token": token,
+    }
+
+    bot.send_message(
+        message.chat.id,
+        f"ایمیل موقتت ساخته شد:\n"
+        f"<code>{html.escape(address)}</code>\n\n"
+        f"برای دیدن پیام‌ها بفرست:\n/inbox",
+        parse_mode="HTML",
+    )
+
+
+@bot.message_handler(commands=["inbox"])
+def inbox(message):
+    user = users.get(message.chat.id)
+
+    if not user:
+        bot.send_message(
+            message.chat.id,
+            "اول /start رو بزن."
+        )
+        return
+
+    headers = {
+        "Authorization": f"Bearer {user['token']}"
+    }
+
+    try:
+        response = api_request(
+            "GET",
+            f"{API}/messages",
+            headers=headers,
+        )
+
+        messages = response.json().get(
+            "hydra:member",
+            []
+        )
+
+    except (requests.RequestException, ValueError):
+        bot.send_message(
+            message.chat.id,
+            "خطا در دریافت ایمیل‌ها. دوباره تلاش کن."
+        )
+        return
+
+    if not messages:
+        bot.send_message(
+            message.chat.id,
+            "هنوز ایمیلی نیومده."
+        )
+        return
+
+    for msg in messages[:5]:
+        message_id = msg.get("id")
+
+        if not message_id:
+            continue
+
+        try:
+            detail = api_request(
+                "GET",
+                f"{API}/messages/{message_id}",
+                headers=headers,
+            ).json()
+
+        except (requests.RequestException, ValueError):
+            continue
+
+        sender = detail.get(
+            "from", {}
+        ).get(
+            "address",
+            "نامشخص"
+        )
+
+        subject = detail.get(
+            "subject",
+            "بدون موضوع"
+        )
+
+        body = (
+            detail.get("text")
+            or detail.get("html")
+            or ""
+        )
+
+        body = str(body)[:2000]
+
+        text = (
+            f"<b>از:</b> {html.escape(str(sender))}\n"
+            f"<b>موضوع:</b> {html.escape(str(subject))}\n\n"
+            f"{html.escape(body)}"
+        )
+
+        bot.send_message(
+            message.chat.id,
+            text,
+            parse_mode="HTML",
+        )
+
+
+if __name__ == "__main__":
+    print("ربات روشن شد...", flush=True)
+
+    bot.infinity_polling(
+        skip_pending=True,
+        timeout=30,
+        long_polling_timeout=30,
+    )
